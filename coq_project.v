@@ -45,5 +45,10 @@ simpl.
 reflexivity.
 Qed.
 
+Example test2: evaluate (Let "x" (Plus (Num 1) (Num 7))(Let "y" (Num 3) (Plus (Var "y") (Plus (Var "x") (Num 1))))) = Ok 12.
+Proof.
+simpl.
+reflexivity.
+Qed.
 
 
