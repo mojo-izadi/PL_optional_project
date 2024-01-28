@@ -1,6 +1,7 @@
 Require Import String.
 Require Import List.
 Require Import Arith. (* Import the Nat module *)
+Require Import Field.
 
 Inductive Expression :=
 | Num (n: nat)
@@ -41,12 +42,67 @@ Definition evaluate (expr: Expression) : EvalResult :=
 
 Example test1: evaluate (Let "y" (Num 3) (Plus (Var "x") (Plus (Num 1) (Num 1)))) = Error.
 Proof.
-simpl.
 reflexivity.
 Qed.
 
 Example test2: evaluate (Let "x" (Plus (Num 1) (Num 7))(Let "y" (Num 3) (Plus (Var "y") (Plus (Var "x") (Num 1))))) = Ok 12.
 Proof.
+simpl.
+reflexivity.
+Qed.
+
+Inductive IsFree (var: string) : Expression -> Prop :=
+| IsFreeVar: IsFree var (Var var)
+| IsFreePlusLeft (e1: Expression) (e2: Expression): IsFree var e1 ->
+IsFree var (Plus e1 e2)
+| IsFreePlusRight (e1: Expression) (e2: Expression): IsFree var e2
+-> IsFree var (Plus e1 e2)
+| IsFreeLetInit (other_var: string) (e1: Expression) (e2:
+Expression):
+IsFree var e1 -> IsFree var (Let other_var e1 e2)
+| IsFreeLetBody (other_var: string) (e1: Expression) (e2:
+Expression):
+IsFree var e2 -> ~ var = other_var -> IsFree var (Let
+other_var e1 e2).
+
+Lemma evaluate_plus: forall n1 n2 e1 e2, evaluate e1 = Ok n1 ->
+evaluate e2 = Ok n2
+-> evaluate (Plus e1 e2) = Ok (n1 + n2).
+Proof.
+intros n1 n2 e1 e2.
+intros H1 H2.
+unfold evaluate in *.
+simpl.
+rewrite H1.
+rewrite H2.
+reflexivity.
+Qed.
+
+Lemma evaluate_plus_comm: forall e1 e2, evaluate (Plus e1 e2) =
+evaluate (Plus e2 e1).
+Proof.
+intros e1 e2.
+unfold evaluate in *.
+simpl.
+destruct evaluate_with_env.
+destruct evaluate_with_env.
+-simpl. rewrite Nat.add_comm. reflexivity.
+-reflexivity.
+-simpl. destruct evaluate_with_env.
+  +reflexivity.
+  +reflexivity.
+Qed.
+
+
+Lemma evaluate_error: forall e, evaluate e = Error <-> exists v,
+IsFree v e.
+Proof.
+intros e. split.
+- intros H. induction e.
+  + destruct IsFree.
+  +
+  +
+  +
 simpl.
 reflexivity.
 Qed.
