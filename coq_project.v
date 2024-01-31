@@ -74,7 +74,7 @@ unfold evaluate in *.
 simpl.
 destruct evaluate_with_env.
 destruct evaluate_with_env.
--simpl. rewrite Nat.add_comm. reflexivity.
+-rewrite Nat.add_comm. reflexivity.
 -reflexivity.
 -destruct evaluate_with_env.
   +reflexivity.
@@ -96,11 +96,18 @@ intro e. intro H. induction e.
     -- assert (exists v : string, IsFree v e1). apply IHe1. reflexivity. 
           destruct H0 as [v1 F]. exists v1. apply IsFreePlusLeft. exact F.
   + destruct (evaluate e1) eqn:E1.
-    -- admit.
-    -- assert (exists v : string, IsFree v e1). apply IHe1. reflexivity. 
-        destruct H0 as [v1 F]. exists v1. apply IsFreeLetInit. exact F.
+    -- unfold evaluate in H. simpl in H. destruct (evaluate_with_env e1 nil) eqn:Eq1.
+      destruct (evaluate_with_env e2 ((var, n0) :: nil)) eqn:Eq2. 
+        ++ discriminate.
+        ++ assert (exists v : string, IsFree v e2). apply IHe2. admit.
+          *destruct H0 as [v1 H0']. exists v1. apply IsFreeLetBody. exact H0'.
+          clear e1 Eq1 E1 IHe1 H n. 
+unfold not.
+intros H. rewrite H in H0'. unfold evaluate_with_env in Eq2. admit.
+        ++ unfold evaluate in E1. rewrite Eq1 in E1. discriminate.
+    -- assert (exists v : string, IsFree v e1). apply IHe1. reflexivity.
+        ++ destruct H0 as [v1 H0']. exists v1. apply IsFreeLetInit. exact H0'.
 Admitted.
-
 
 Lemma evaluate_error: forall e, evaluate e = Error <-> exists v,
 IsFree v e.
@@ -109,12 +116,14 @@ intros e. split.
 - apply error_implies_free.
 - intro H. induction e.
   + destruct H as [v F]. inversion F.
-  + destruct H as [v0 F]. inversion F; subst. 
+  + destruct H as [v0 F]. inversion F. 
   destruct (lookup_variable v nil) as [n |] eqn:L. discriminate.
   unfold evaluate. unfold evaluate_with_env. rewrite L. reflexivity.
-  + destruct H as [v F].
-    -- admit.
-  + admit.
+  + destruct H as [v F]. unfold evaluate. simpl. destruct (evaluate e1) eqn:E1.
+    -- unfold evaluate in E1. rewrite E1. admit.
+    -- unfold evaluate in E1. rewrite E1. reflexivity.
+  + destruct H as [v F]. unfold evaluate. simpl. destruct (evaluate e1) eqn:E1.
+    -- unfold evaluate in E1. rewrite E1. admit.
+    --  unfold evaluate in E1. rewrite E1. reflexivity.
 Admitted.
-
 
